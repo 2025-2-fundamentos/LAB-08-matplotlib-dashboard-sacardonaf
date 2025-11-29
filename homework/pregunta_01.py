@@ -35,3 +35,86 @@ def pregunta_01():
     * Su código debe crear la carpeta `docs` si no existe.
 
     """
+
+    import pandas as pd
+    import matplotlib.pyplot as plt
+    import os
+
+    def create_folder():
+        if not os.path.exists('docs'):
+            os.mkdir('docs')
+
+    def load_Data():
+        df=pd.read_csv('files/input/shipping-data.csv', index_col=0)
+        return df
+
+    def grafica_Warehouse_block(df):
+        df=df.copy()
+        plt.figure()
+        counts=df.Warehouse_block.value_counts()
+        counts.plot.bar(title='Shipping per Warehouse',xlabel='Warehouse block',ylabel='Record COunt',color='tab:blue',fontsize=8)
+        plt.gca().spines['top'].set_visible(False)
+        plt.gca().spines['right'].set_visible(False)
+        plt.tight_layout()
+        plt.savefig('docs/shipping_per_warehouse.png')
+
+    def grafica_Mode_of_Shipment(df):
+        df=df.copy()
+        plt.figure()
+        counts=df.Mode_of_Shipment.value_counts()
+        counts.plot.pie(title='Mode of shipment',wedgeprops=dict(width=0.35),ylabel='',colors=['tab:blue','tab:orange','tab:green'])
+        plt.tight_layout()
+        plt.savefig('docs/mode_of_shipment.png')
+
+    def grafica_Customer_rating(df):
+        df=df.copy()
+        plt.figure()
+        df=df[['Mode_of_Shipment','Customer_rating']].groupby('Mode_of_Shipment').describe()['Customer_rating']
+        df=df[['mean','min','max']]
+        plt.barh(y=df.index.values,width=df['max'].values-1,left=df['min'].values,height=0.9,color='lightgray',alpha=0.8)
+        colors=['tab:green' if valor>=3 else 'tab:orange' for valor in df['mean']]
+        plt.barh(y=df.index.values,width=df['mean'].values-1,left=df['min'].values,height=0.5,color=colors,alpha=1.0)
+        plt.title('Average Customer Rating')
+        plt.gca().spines['top'].set_visible(False)
+        plt.gca().spines['right'].set_visible(False)
+        plt.gca().spines['bottom'].set_color('gray')
+        plt.gca().spines['left'].set_color('gray')
+        plt.tight_layout()
+        plt.savefig('docs/average_customer_rating.png')
+    
+    def grafica_Weight_in_gms(df):
+        df=df.copy()
+        plt.figure()
+        df.Weight_in_gms.plot.hist(title='Shipped Weight Distribution',color='tab:orange',edgecolor='white')
+        plt.gca().spines['top'].set_visible(False)
+        plt.gca().spines['right'].set_visible(False)
+        plt.tight_layout()
+        plt.savefig('docs/weight_distribution.png')
+    
+    def generar_html():
+        html='''
+        <!DOCTYPE html>
+        <html>
+            <body>
+                <h1>Shipping Dashboard Example</h1>
+                <div style='width:45%;float:left'>
+                    <img src='shipping_per_warehouse.png' alt='Fig 1'>
+                    <img src='mode_of_shipment.png' alt='Fig 2'>
+                </div>
+                <div style='width:45%;float:left'>
+                    <img src='average_customer_rating.png' alt='Fig 3'>
+                    <img src='weight_distribution.png' alt='Fig 4'>
+                </div>
+            </body>
+        </html>
+        '''
+        with open('docs/index.html','w',encoding='utf-8') as f:
+            f.write(html)
+
+    create_folder()
+    df=load_Data()
+    grafica_Warehouse_block(df)
+    grafica_Mode_of_Shipment(df)
+    grafica_Customer_rating(df)
+    grafica_Weight_in_gms(df)
+    generar_html()
